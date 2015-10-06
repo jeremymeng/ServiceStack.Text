@@ -1,0 +1,57 @@
+﻿{
+  "version": "1.0.0-*",
+  "description": "ServiceStack.Text.NetCore Class Library",
+  "authors": [ "jeremymeng" ],
+  "tags": [ "" ],
+  "projectUrl": "",
+  "licenseUrl": "",
+
+  "configurations": {
+    "Debug": {
+      "compilationOptions": {
+        "define": [ "DEBUG", "TRACE", "DNXCORE50" ]
+      }
+    },
+    "Release": {
+      "compilationOptions": {
+        "define": [ "RELEASE", "TRACE", "DNXCORE50" ],
+        "optimize": true
+      }
+    }
+  },
+
+  "dependencies": {
+  },
+
+  "compile": [
+    "../../ServiceStack.Text/**/*.cs"
+  ],
+
+  "frameworks": {
+    "dnxcore50": {
+      "dependencies": {
+        "System.ComponentModel": "4.0.0",
+        "System.ComponentModel.Annotations": "4.0.0",
+        "System.Linq": "4.0.0",
+        "System.Linq.Expressions": "4.0.10",
+        "System.Net.Primitives": "4.0.10",
+        "System.Net.Sockets": "4.0.0",
+        "System.Net.Http": "4.0.0",
+        "System.Net.Http.WinHttpHandler": "4.0.0-beta-*",
+        "System.Net.Requests": "4.0.10",
+        "System.Net.WebHeaderCollection": "4.0.0",
+        "System.Net.NameResolution": "4.0.0-beta-*",
+        "System.Text.RegularExpressions": "4.0.10",
+        "System.Xml.XmlSerializer": "4.0.10",
+        "System.Xml.ReaderWriter": "4.0.10",
+        "System.Xml.XDocument": "4.0.10",
+        "System.Reflection": "4.0.10",
+        "System.Reflection.Emit": "4.0.0",
+        "System.Reflection.Emit.ILGeneration": "4.0.0",
+        "System.Runtime.Serialization.Xml": "4.0.10",
+        "System.Security.Cryptography.Algorithms": "4.0.0-beta-*",
+        "System.Security.Cryptography.X509Certificates": "4.0.0-beta-*"
+      }
+    }
+  }
+}
