@@ -1,4 +1,4 @@
-﻿#if !(XBOX || SL5 || NETFX_CORE || WP || PCL)
+﻿#if !(XBOX || SL5 || NETFX_CORE || WP || PCL || DNXCORE50)
 using System;
 using System.Collections;
 using System.Collections.Concurrent;

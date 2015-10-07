@@ -35,7 +35,7 @@ namespace ServiceStack.Text
                 IsWindowsStore = true;
             }
 
-#if PCL
+#if PCL || DNXCORE50
             IsUnix = IsMono;
 #else
             var platform = (int)Environment.OSVersion.Platform;

@@ -28,8 +28,8 @@ namespace ServiceStack
         }
 
         public static PclExport Instance
-#if PCL
-          /*attempts to be inferred otherwise needs to be set explicitly by host project*/
+#if PCL || DNXCORE50
+        /*attempts to be inferred otherwise needs to be set explicitly by host project*/
 #elif SL5
           = new Sl5PclExport()
 #elif NETFX_CORE

@@ -1,6 +1,6 @@
 ﻿{
-  "version": "1.0.0-*",
-  "description": "ServiceStack.Text.NetCore Class Library",
+  "version": "4.1.0",
+  "description": "ServiceStack.Text.NetCore",
   "authors": [ "jeremymeng" ],
   "tags": [ "" ],
   "projectUrl": "",

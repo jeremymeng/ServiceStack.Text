@@ -21,7 +21,7 @@ namespace ServiceStack.Text.Common
 
         public static object NullValueType(Type type)
         {
-#if NETFX_CORE
+#if NETFX_CORE || DNXCORE50
             return type.GetTypeInfo().IsValueType ? Activator.CreateInstance(type) : null;
 #else
             return type.GetDefaultValue();
