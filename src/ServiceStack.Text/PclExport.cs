@@ -28,7 +28,7 @@ namespace ServiceStack
         }
 
         public static PclExport Instance
-#if PCL || DNXCORE50
+#if PCL
         /*attempts to be inferred otherwise needs to be set explicitly by host project*/
 #elif SL5
           = new Sl5PclExport()
@@ -42,6 +42,8 @@ namespace ServiceStack
           = new IosPclExport()
 #elif ANDROID
           = new AndroidPclExport()
+#elif DNXCORE50
+          = new Net40PclExport()
 #else
           = new Net40PclExport()
 #endif

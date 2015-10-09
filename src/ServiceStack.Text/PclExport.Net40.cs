@@ -1,4 +1,4 @@
-﻿#if !(XBOX || SL5 || NETFX_CORE || WP || PCL || DNXCORE50)
+﻿#if !(XBOX || SL5 || NETFX_CORE || WP || PCL)
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -42,16 +42,22 @@ namespace ServiceStack
             this.AltDirSep = Path.DirectorySeparatorChar == '/' ? '\\' : '/';
             this.RegexOptions = RegexOptions.Compiled;
 #if DNXCORE50
-            this.InvariantComparison = CultureInfo.InvariantCulture.CompareInfo.GetStringComparer();
-            this.InvariantComparisonIgnoreCase = CultureInfo.InvariantCultureIgnoreCase.CompareInfo.GetStringComparer();
+            this.InvariantComparison = StringComparison.Ordinal;
+            this.InvariantComparisonIgnoreCase = StringComparison.OrdinalIgnoreCase;
+            this.InvariantComparer = CultureInfo.InvariantCulture.CompareInfo.GetStringComparer(CompareOptions.None);
+            this.InvariantComparerIgnoreCase = CultureInfo.InvariantCulture.CompareInfo.GetStringComparer(CompareOptions.IgnoreCase);
 #else
             this.InvariantComparison = StringComparison.InvariantCulture;
             this.InvariantComparisonIgnoreCase = StringComparison.InvariantCultureIgnoreCase;
-#endif
             this.InvariantComparer = StringComparer.InvariantCulture;
             this.InvariantComparerIgnoreCase = StringComparer.InvariantCultureIgnoreCase;
+#endif
 
+#if DNXCORE50
+            this.PlatformName = "DnxCore";
+#else
             this.PlatformName = Environment.OSVersion.Platform.ToString();
+#endif
         }
 
         public static PclExport Configure()
@@ -65,14 +71,20 @@ namespace ServiceStack
             return File.ReadAllText(filePath);
         }
 
+#if !DNXCORE50
         public override string ToTitleCase(string value)
         {
             return TextInfo.ToTitleCase(value).Replace("_", String.Empty);
         }
+#endif
 
         public override string ToInvariantUpper(char value)
         {
+#if !DNXCORE50
             return value.ToString(CultureInfo.InvariantCulture).ToUpper();
+#else
+            return value.ToString().ToUpper();
+#endif
         }
 
         public override bool IsAnonymousType(Type type)
@@ -80,7 +92,7 @@ namespace ServiceStack
             return type.HasAttribute<CompilerGeneratedAttribute>()
                    && type.IsGeneric() && type.Name.Contains("AnonymousType")
                    && (type.Name.StartsWith("<>", StringComparison.Ordinal) || type.Name.StartsWith("VB$", StringComparison.Ordinal))
-                   && (type.Attributes & TypeAttributes.NotPublic) == TypeAttributes.NotPublic;
+                   && (type.GetTypeInfo().Attributes & TypeAttributes.NotPublic) == TypeAttributes.NotPublic;
         }
 
         public override bool FileExists(string filePath)
@@ -127,7 +139,11 @@ namespace ServiceStack
 #elif __IOS__
 #else
             //Automatically register license key stored in <appSettings/>
+#if !DNXCORE50
             var licenceKeyText = System.Configuration.ConfigurationManager.AppSettings[AppSettingsKey];
+#else
+            var licenceKeyText = string.Empty;
+#endif
             if (!string.IsNullOrEmpty(licenceKeyText))
             {
                 LicenseUtils.RegisterLicense(licenceKeyText);
@@ -150,29 +166,47 @@ namespace ServiceStack
 
         public override void WriteLine(string line)
         {
+#if !DNXCORE50
             Console.WriteLine(line);
+#else
+            System.Diagnostics.Debug.WriteLine(line);
+#endif
         }
 
         public override void WriteLine(string format, params object[] args)
         {
+#if !DNXCORE50
             Console.WriteLine(format, args);
+#else
+            System.Diagnostics.Debug.WriteLine(format, args);
+#endif
         }
 
+#if !DNXCORE50
         public override void AddCompression(WebRequest webReq)
         {
             var httpReq = (HttpWebRequest)webReq;
             httpReq.Headers.Add(HttpRequestHeader.AcceptEncoding, "gzip,deflate");
             httpReq.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
         }
+#endif
 
         public override Stream GetRequestStream(WebRequest webRequest)
         {
+#if !DNXCORE50
             return webRequest.GetRequestStream();
+#else
+            return webRequest.GetRequestStreamAsync().Result;
+#endif
         }
 
         public override WebResponse GetResponse(WebRequest webRequest)
         {
+#if !DNXCORE50
             return webRequest.GetResponse();
+#else
+            return webRequest.GetResponseAsync().Result;
+#endif
         }
 
 #if !LITE
@@ -189,7 +223,7 @@ namespace ServiceStack
         {
             if (relativePath.StartsWith("~"))
             {
-                var assemblyDirectoryPath = Path.GetDirectoryName(new Uri(typeof(PathUtils).Assembly.EscapedCodeBase).LocalPath);
+                var assemblyDirectoryPath = Path.GetDirectoryName(new Uri(typeof(PathUtils).GetTypeInfo().Assembly.EscapedCodeBase).LocalPath);
 
                 // Escape the assembly bin directory to the hostname directory
                 var hostDirectoryPath = appendPartialPathModifier != null
@@ -208,17 +242,27 @@ namespace ServiceStack
 
         public override void AddHeader(WebRequest webReq, string name, string value)
         {
+#if !DNXCORE50
             webReq.Headers.Add(name, value);
+#else
+            webReq.Headers[name] = value;
+#endif
         }
 
+#if !DNXCORE50
         public override Assembly[] GetAllAssemblies()
         {
             return AppDomain.CurrentDomain.GetAssemblies();
         }
+#endif
 
         public override Type FindType(string typeName, string assemblyName)
         {
+#if !DNXCORE50
             var binPath = AssemblyUtils.GetAssemblyBinPath(Assembly.GetExecutingAssembly());
+#else
+            var binPath = AssemblyUtils.GetAssemblyBinPath(typeof(Net40PclExport).GetTypeInfo().Assembly);
+#endif
             Assembly assembly = null;
             var assemblyDllPath = binPath + string.Format("{0}.{1}", assemblyName, "dll");
             if (File.Exists(assemblyDllPath))
@@ -261,9 +305,9 @@ namespace ServiceStack
 
         public override Type GetGenericCollectionType(Type type)
         {
-            return type.FindInterfaces((t, critera) =>
-                t.IsGenericType
-                && t.GetGenericTypeDefinition() == typeof(ICollection<>), null).FirstOrDefault();
+            return type.Interfaces().Where(t =>
+                t.GetTypeInfo().IsGenericType
+                && t.GetGenericTypeDefinition() == typeof(ICollection<>)).FirstOrDefault();
         }
 
         public override PropertySetterDelegate GetPropertySetterFn(PropertyInfo propertyInfo)
@@ -306,7 +350,7 @@ namespace ServiceStack
             try
             {
                 var oInstanceParam = Expression.Parameter(typeof(object), "oInstanceParam");
-                var instanceParam = Expression.Convert(oInstanceParam, propertyInfo.ReflectedType); //propertyInfo.DeclaringType doesn't work on Proxy types
+                var instanceParam = Expression.Convert(oInstanceParam, propertyInfo.ReflectedType()); //propertyInfo.DeclaringType doesn't work on Proxy types
 
                 var exprCallPropertyGetFn = Expression.Call(instanceParam, getMethodInfo);
                 var oExprCallPropertyGetFn = Expression.Convert(exprCallPropertyGetFn, typeof(object));
@@ -406,7 +450,7 @@ namespace ServiceStack
             else
             {
                 // Check if we can use the as operator for casting or if we must use the convert method
-                if (targetType.IsValueType && !targetType.IsNullableType())
+                if (targetType.GetTypeInfo().IsValueType && !targetType.IsNullableType())
                 {
                     result = Expression.Convert(expression, targetType);
                 }
@@ -457,7 +501,7 @@ namespace ServiceStack
         {
             // .Net 2.0 - 3.5 has an issue with DateTime.ToUniversalTime, but works ok with TimeZoneInfo.ConvertTimeToUtc.
             // .Net 4.0+ does this under the hood anyway.
-            return TimeZoneInfo.ConvertTimeToUtc(dateTime);
+            return TimeZoneInfo.ConvertTime(dateTime, TimeZoneInfo.Utc);
         }
 
         public override ParseStringDelegate GetDictionaryParseMethod<TSerializer>(Type type)
@@ -505,7 +549,11 @@ namespace ServiceStack
 
         public override void CloseStream(Stream stream)
         {
+#if !DNXCORE50
             stream.Close();
+#else
+            stream.Dispose();
+#endif
         }
 
         public override LicenseKey VerifyLicenseKeyText(string licenseKeyText)
@@ -520,12 +568,12 @@ namespace ServiceStack
         public override void VerifyInAssembly(Type accessType, ICollection<string> assemblyNames)
         {
             //might get merged/mangled on alt platforms
-            if (assemblyNames.Contains(accessType.Assembly.ManifestModule.Name))
+            if (assemblyNames.Contains(accessType.GetTypeInfo().Assembly.ManifestModule.Name))
                 return;
 
             try
             {
-                if (assemblyNames.Contains(accessType.Assembly.Location.SplitOnLast(Path.DirectorySeparatorChar).Last()))
+                if (assemblyNames.Contains(accessType.GetTypeInfo().Assembly.Location.SplitOnLast(Path.DirectorySeparatorChar).Last()))
                     return;
             }
             catch (Exception)
@@ -535,12 +583,13 @@ namespace ServiceStack
 
             var errorDetails = " Type: '{0}', Assembly: '{1}', '{2}'".Fmt(
                 accessType.Name,
-                accessType.Assembly.ManifestModule.Name,
-                accessType.Assembly.Location);
+                accessType.GetTypeInfo().Assembly.ManifestModule.Name,
+                accessType.GetTypeInfo().Assembly.Location);
 
             throw new LicenseException(LicenseUtils.ErrorMessages.UnauthorizedAccessRequest + errorDetails);
         }
 
+#if !DNXCORE50
         public override void BeginThreadAffinity()
         {
             Thread.BeginThreadAffinity();
@@ -550,6 +599,7 @@ namespace ServiceStack
         {
             Thread.EndThreadAffinity();
         }
+#endif
 
         public override void Config(HttpWebRequest req,
             bool? allowAutoRedirect = null,
@@ -591,7 +641,7 @@ namespace ServiceStack
 
         public override Type UseType(Type type)
         {
-            if (type.IsInterface || type.IsAbstract)
+            if (type.GetTypeInfo().IsInterface || type.GetTypeInfo().IsAbstract)
             {
                 return DynamicProxy.GetInstanceFor(type).GetType();
             }
@@ -626,7 +676,7 @@ namespace ServiceStack
             generator.Emit(OpCodes.Castclass, propertyInfo.DeclaringType);
             generator.Emit(OpCodes.Ldarg_1);
 
-            generator.Emit(propertyInfo.PropertyType.IsClass
+            generator.Emit(propertyInfo.PropertyType.GetTypeInfo().IsClass
                                ? OpCodes.Castclass
                                : OpCodes.Unbox_Any,
                            propertyInfo.PropertyType);
@@ -646,7 +696,7 @@ namespace ServiceStack
             generator.Emit(OpCodes.Castclass, fieldInfo.DeclaringType);
             generator.Emit(OpCodes.Ldarg_1);
 
-            generator.Emit(fieldInfo.FieldType.IsClass
+            generator.Emit(fieldInfo.FieldType.GetTypeInfo().IsClass
                                ? OpCodes.Castclass
                                : OpCodes.Unbox_Any,
                            fieldInfo.FieldType);
@@ -1026,7 +1076,7 @@ namespace ServiceStack
             }
             else
             {
-                if (methodInfo.ReturnType.IsValueType || methodInfo.ReturnType.IsEnum)
+                if (methodInfo.ReturnType.GetTypeInfo().IsValueType || methodInfo.ReturnType.GetTypeInfo().IsEnum)
                 {
                     MethodInfo getMethod = typeof(Activator).GetMethod("CreateInstance",
                                                                        new[] { typeof(Type) });
@@ -1188,7 +1238,11 @@ namespace ServiceStack
             if (HttpUtils.ResultsFilter != null)
                 return null;
 
+#if !DNXCORE50
             return webReq.GetResponse();
+#else
+            return webReq.GetResponseAsync().Result;
+#endif
         }
 
         public static WebResponse PutFileToUrl(this string url,
@@ -1207,7 +1261,11 @@ namespace ServiceStack
             if (HttpUtils.ResultsFilter != null)
                 return null;
 
+#if !DNXCORE50
             return webReq.GetResponse();
+#else
+            return webReq.GetResponseAsync().Result;
+#endif
         }
 
         public static WebResponse UploadFile(this WebRequest webRequest,
@@ -1223,7 +1281,11 @@ namespace ServiceStack
             if (HttpUtils.ResultsFilter != null)
                 return null;
 
+#if !DNXCORE50
             return webRequest.GetResponse();
+#else
+            return webRequest.GetResponseAsync().Result;
+#endif
         }
 
         //XmlSerializer
@@ -1521,7 +1583,7 @@ namespace ServiceStack.Text.FastMember
 
         private static void WriteGetter(ILGenerator il, Type type, PropertyInfo[] props, FieldInfo[] fields, bool isStatic)
         {
-            LocalBuilder loc = type.IsValueType ? il.DeclareLocal(type) : null;
+            LocalBuilder loc = type.GetTypeInfo().IsValueType ? il.DeclareLocal(type) : null;
             OpCode propName = isStatic ? OpCodes.Ldarg_1 : OpCodes.Ldarg_2, target = isStatic ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1;
             foreach (PropertyInfo prop in props)
             {
@@ -1537,8 +1599,8 @@ namespace ServiceStack.Text.FastMember
                 // match:
                 il.Emit(target);
                 Cast(il, type, loc);
-                il.EmitCall(type.IsValueType ? OpCodes.Call : OpCodes.Callvirt, getFn, null);
-                if (prop.PropertyType.IsValueType)
+                il.EmitCall(type.GetTypeInfo().IsValueType ? OpCodes.Call : OpCodes.Callvirt, getFn, null);
+                if (prop.PropertyType.GetTypeInfo().IsValueType)
                 {
                     il.Emit(OpCodes.Box, prop.PropertyType);
                 }
@@ -1557,7 +1619,7 @@ namespace ServiceStack.Text.FastMember
                 il.Emit(target);
                 Cast(il, type, loc);
                 il.Emit(OpCodes.Ldfld, field);
-                if (field.FieldType.IsValueType)
+                if (field.FieldType.GetTypeInfo().IsValueType)
                 {
                     il.Emit(OpCodes.Box, field.FieldType);
                 }
@@ -1571,7 +1633,7 @@ namespace ServiceStack.Text.FastMember
         }
         private static void WriteSetter(ILGenerator il, Type type, PropertyInfo[] props, FieldInfo[] fields, bool isStatic)
         {
-            if (type.IsValueType)
+            if (type.GetTypeInfo().IsValueType)
             {
                 il.Emit(OpCodes.Ldstr, "Write is not supported for structs");
                 il.Emit(OpCodes.Newobj, typeof(NotSupportedException).GetConstructor(new Type[] { typeof(string) }));
@@ -1582,7 +1644,7 @@ namespace ServiceStack.Text.FastMember
                 OpCode propName = isStatic ? OpCodes.Ldarg_1 : OpCodes.Ldarg_2,
                        target = isStatic ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1,
                        value = isStatic ? OpCodes.Ldarg_2 : OpCodes.Ldarg_3;
-                LocalBuilder loc = type.IsValueType ? il.DeclareLocal(type) : null;
+                LocalBuilder loc = type.GetTypeInfo().IsValueType ? il.DeclareLocal(type) : null;
                 foreach (PropertyInfo prop in props)
                 {
                     if (prop.GetIndexParameters().Length != 0 || !prop.CanWrite) continue;
@@ -1599,7 +1661,7 @@ namespace ServiceStack.Text.FastMember
                     Cast(il, type, loc);
                     il.Emit(value);
                     Cast(il, prop.PropertyType, null);
-                    il.EmitCall(type.IsValueType ? OpCodes.Call : OpCodes.Callvirt, setFn, null);
+                    il.EmitCall(type.GetTypeInfo().IsValueType ? OpCodes.Call : OpCodes.Callvirt, setFn, null);
                     il.Emit(OpCodes.Ret);
                     // not match:
                     il.MarkLabel(next);
@@ -1653,8 +1715,8 @@ namespace ServiceStack.Text.FastMember
 
         private static bool IsFullyPublic(Type type)
         {
-            while (type.IsNestedPublic) type = type.DeclaringType;
-            return type.IsPublic;
+            while (type.GetTypeInfo().IsNestedPublic) type = type.DeclaringType;
+            return type.GetTypeInfo().IsPublic;
         }
 
         static TypeAccessor CreateNew(Type type)
@@ -1700,7 +1762,7 @@ namespace ServiceStack.Text.FastMember
                 module = assembly.DefineDynamicModule(name.Name);
             }
             TypeBuilder tb = module.DefineType("FastMember_dynamic." + type.Name + "_" + Interlocked.Increment(ref counter),
-                (typeof(TypeAccessor).Attributes | TypeAttributes.Sealed) & ~TypeAttributes.Abstract, typeof(TypeAccessor));
+                (typeof(TypeAccessor).GetTypeInfo().Attributes | TypeAttributes.Sealed) & ~TypeAttributes.Abstract, typeof(TypeAccessor));
 
             tb.DefineDefaultConstructor(MethodAttributes.Public);
             PropertyInfo indexer = typeof(TypeAccessor).GetProperty("Item");
@@ -1738,7 +1800,7 @@ namespace ServiceStack.Text.FastMember
         private static void Cast(ILGenerator il, Type type, LocalBuilder addr)
         {
             if (type == typeof(object)) { }
-            else if (type.IsValueType)
+            else if (type.GetTypeInfo().IsValueType)
             {
                 il.Emit(OpCodes.Unbox_Any, type);
                 if (addr != null)
