@@ -209,7 +209,7 @@ namespace ServiceStack
 #endif
         }
 
-#if !LITE
+#if !LITE && !DNXCORE50
         public override bool IsDebugBuild(Assembly assembly)
         {
             return assembly.AllAttributes()
@@ -284,7 +284,7 @@ namespace ServiceStack
 
         public override string GetAssemblyPath(Type source)
         {
-            var assemblyUri = new Uri(source.Assembly.EscapedCodeBase);
+            var assemblyUri = new Uri(source.GetTypeInfo().Assembly.EscapedCodeBase);
             return assemblyUri.LocalPath;
         }
 
