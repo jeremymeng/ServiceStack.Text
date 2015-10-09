@@ -1295,7 +1295,7 @@ namespace ServiceStack
             throw new NotImplementedException("Compression is not supported on this platform");
 #else
             using (var deflateStream = new System.IO.Compression.DeflateStream(stream, System.IO.Compression.CompressionMode.Compress))
-            using (var xw = new System.Xml.XmlTextWriter(deflateStream, Encoding.UTF8))
+            using (var xw = System.Xml.XmlWriter.Create(deflateStream, new System.Xml.XmlWriterSettings { Encoding = Encoding.UTF8 }))
             {
                 var serializer = new DataContractSerializer(from.GetType());
                 serializer.WriteObject(xw, from);

@@ -42,8 +42,6 @@ namespace ServiceStack
           = new IosPclExport()
 #elif ANDROID
           = new AndroidPclExport()
-#elif DNXCORE50
-          = new Net40PclExport()
 #else
           = new Net40PclExport()
 #endif

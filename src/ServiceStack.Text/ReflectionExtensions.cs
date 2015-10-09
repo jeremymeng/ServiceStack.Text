@@ -85,6 +85,11 @@ namespace ServiceStack
             IReflectableType reflectableType = (IReflectableType)type;
             return reflectableType.GetTypeInfo();
         }
+#else
+        public static Type GetTypeInfo(this Type type)
+        {
+            return type;
+        }
 #endif
 
         public static TypeCode GetTypeCode(this Type type)
