@@ -713,7 +713,7 @@ namespace ServiceStack
             var name = string.Format("_{0}{1}_", "Set", memberInfo.Name);
             var returnType = typeof(void);
 
-            return !memberInfo.DeclaringType.IsInterface
+            return !memberInfo.DeclaringType.IsInterface()
                        ? new DynamicMethod(name, returnType, args, memberInfo.DeclaringType, true)
                        : new DynamicMethod(name, returnType, args, memberInfo.Module, true);
         }
@@ -1038,7 +1038,11 @@ namespace ServiceStack
             foreach (var face in targetType.GetInterfaces())
                 IncludeType(face, typeBuilder);
 
+#if !DNXCORE50
             return typeBuilder.CreateType();
+#else
+            return typeBuilder.CreateTypeInfo().GetType();
+#endif
         }
 
         static void IncludeType(Type typeOfT, TypeBuilder typeBuilder)
@@ -1346,7 +1350,11 @@ namespace ServiceStack
 
         public static bool VerifySha1Data(this RSACryptoServiceProvider RSAalg, byte[] unsignedData, byte[] encryptedData)
         {
+#if !DNXCORE50
             return RSAalg.VerifyData(unsignedData, new SHA1CryptoServiceProvider(), encryptedData);
+#else
+            return RSAalg.VerifyData(unsignedData, "SHA1", encryptedData);
+#endif
             //SL5 || WP
             //return RSAalg.VerifyData(unsignedData, encryptedData, new EMSAPKCS1v1_5_SHA1()); 
         }
@@ -1794,7 +1802,11 @@ namespace ServiceStack.Text.FastMember
                 tb.DefineMethodOverride(body, baseMethod);
             }
 
+#if !DNXCORE50
             return (TypeAccessor)Activator.CreateInstance(tb.CreateType());
+#else
+            return (TypeAccessor)Activator.CreateInstance(tb.CreateTypeInfo().GetType());
+#endif
         }
 
         private static void Cast(ILGenerator il, Type type, LocalBuilder addr)
