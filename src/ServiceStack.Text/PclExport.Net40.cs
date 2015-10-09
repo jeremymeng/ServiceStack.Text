@@ -306,7 +306,7 @@ namespace ServiceStack
         public override Type GetGenericCollectionType(Type type)
         {
             return type.Interfaces().Where(t =>
-                t.GetTypeInfo().IsGenericType
+                t.IsGenericType()
                 && t.GetGenericTypeDefinition() == typeof(ICollection<>)).FirstOrDefault();
         }
 
@@ -450,7 +450,7 @@ namespace ServiceStack
             else
             {
                 // Check if we can use the as operator for casting or if we must use the convert method
-                if (targetType.GetTypeInfo().IsValueType && !targetType.IsNullableType())
+                if (targetType.IsValueType() && !targetType.IsNullableType())
                 {
                     result = Expression.Convert(expression, targetType);
                 }
@@ -641,7 +641,7 @@ namespace ServiceStack
 
         public override Type UseType(Type type)
         {
-            if (type.GetTypeInfo().IsInterface || type.GetTypeInfo().IsAbstract)
+            if (type.IsInterface() || type.IsAbstract())
             {
                 return DynamicProxy.GetInstanceFor(type).GetType();
             }
@@ -676,7 +676,7 @@ namespace ServiceStack
             generator.Emit(OpCodes.Castclass, propertyInfo.DeclaringType);
             generator.Emit(OpCodes.Ldarg_1);
 
-            generator.Emit(propertyInfo.PropertyType.GetTypeInfo().IsClass
+            generator.Emit(propertyInfo.PropertyType.IsClass()
                                ? OpCodes.Castclass
                                : OpCodes.Unbox_Any,
                            propertyInfo.PropertyType);
@@ -696,7 +696,7 @@ namespace ServiceStack
             generator.Emit(OpCodes.Castclass, fieldInfo.DeclaringType);
             generator.Emit(OpCodes.Ldarg_1);
 
-            generator.Emit(fieldInfo.FieldType.GetTypeInfo().IsClass
+            generator.Emit(fieldInfo.FieldType.IsClass()
                                ? OpCodes.Castclass
                                : OpCodes.Unbox_Any,
                            fieldInfo.FieldType);
@@ -1076,7 +1076,7 @@ namespace ServiceStack
             }
             else
             {
-                if (methodInfo.ReturnType.GetTypeInfo().IsValueType || methodInfo.ReturnType.GetTypeInfo().IsEnum)
+                if (methodInfo.ReturnType.IsValueType() || methodInfo.ReturnType.IsEnum())
                 {
                     MethodInfo getMethod = typeof(Activator).GetMethod("CreateInstance",
                                                                        new[] { typeof(Type) });
@@ -1583,7 +1583,7 @@ namespace ServiceStack.Text.FastMember
 
         private static void WriteGetter(ILGenerator il, Type type, PropertyInfo[] props, FieldInfo[] fields, bool isStatic)
         {
-            LocalBuilder loc = type.GetTypeInfo().IsValueType ? il.DeclareLocal(type) : null;
+            LocalBuilder loc = type.IsValueType() ? il.DeclareLocal(type) : null;
             OpCode propName = isStatic ? OpCodes.Ldarg_1 : OpCodes.Ldarg_2, target = isStatic ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1;
             foreach (PropertyInfo prop in props)
             {
@@ -1599,8 +1599,8 @@ namespace ServiceStack.Text.FastMember
                 // match:
                 il.Emit(target);
                 Cast(il, type, loc);
-                il.EmitCall(type.GetTypeInfo().IsValueType ? OpCodes.Call : OpCodes.Callvirt, getFn, null);
-                if (prop.PropertyType.GetTypeInfo().IsValueType)
+                il.EmitCall(type.IsValueType() ? OpCodes.Call : OpCodes.Callvirt, getFn, null);
+                if (prop.PropertyType.IsValueType())
                 {
                     il.Emit(OpCodes.Box, prop.PropertyType);
                 }
@@ -1619,7 +1619,7 @@ namespace ServiceStack.Text.FastMember
                 il.Emit(target);
                 Cast(il, type, loc);
                 il.Emit(OpCodes.Ldfld, field);
-                if (field.FieldType.GetTypeInfo().IsValueType)
+                if (field.FieldType.IsValueType())
                 {
                     il.Emit(OpCodes.Box, field.FieldType);
                 }
@@ -1633,7 +1633,7 @@ namespace ServiceStack.Text.FastMember
         }
         private static void WriteSetter(ILGenerator il, Type type, PropertyInfo[] props, FieldInfo[] fields, bool isStatic)
         {
-            if (type.GetTypeInfo().IsValueType)
+            if (type.IsValueType())
             {
                 il.Emit(OpCodes.Ldstr, "Write is not supported for structs");
                 il.Emit(OpCodes.Newobj, typeof(NotSupportedException).GetConstructor(new Type[] { typeof(string) }));
@@ -1644,7 +1644,7 @@ namespace ServiceStack.Text.FastMember
                 OpCode propName = isStatic ? OpCodes.Ldarg_1 : OpCodes.Ldarg_2,
                        target = isStatic ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1,
                        value = isStatic ? OpCodes.Ldarg_2 : OpCodes.Ldarg_3;
-                LocalBuilder loc = type.GetTypeInfo().IsValueType ? il.DeclareLocal(type) : null;
+                LocalBuilder loc = type.IsValueType() ? il.DeclareLocal(type) : null;
                 foreach (PropertyInfo prop in props)
                 {
                     if (prop.GetIndexParameters().Length != 0 || !prop.CanWrite) continue;
@@ -1661,7 +1661,7 @@ namespace ServiceStack.Text.FastMember
                     Cast(il, type, loc);
                     il.Emit(value);
                     Cast(il, prop.PropertyType, null);
-                    il.EmitCall(type.GetTypeInfo().IsValueType ? OpCodes.Call : OpCodes.Callvirt, setFn, null);
+                    il.EmitCall(type.IsValueType() ? OpCodes.Call : OpCodes.Callvirt, setFn, null);
                     il.Emit(OpCodes.Ret);
                     // not match:
                     il.MarkLabel(next);
@@ -1715,8 +1715,8 @@ namespace ServiceStack.Text.FastMember
 
         private static bool IsFullyPublic(Type type)
         {
-            while (type.GetTypeInfo().IsNestedPublic) type = type.DeclaringType;
-            return type.GetTypeInfo().IsPublic;
+            while (type.IsNestedPublic()) type = type.DeclaringType;
+            return type.IsPublic();
         }
 
         static TypeAccessor CreateNew(Type type)
@@ -1729,7 +1729,7 @@ namespace ServiceStack.Text.FastMember
             PropertyInfo[] props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
             FieldInfo[] fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
             ConstructorInfo ctor = null;
-            if (type.IsClass && !type.IsAbstract)
+            if (type.IsClass() && !type.IsAbstract())
             {
                 ctor = type.GetConstructor(Type.EmptyTypes);
             }
@@ -1800,7 +1800,7 @@ namespace ServiceStack.Text.FastMember
         private static void Cast(ILGenerator il, Type type, LocalBuilder addr)
         {
             if (type == typeof(object)) { }
-            else if (type.GetTypeInfo().IsValueType)
+            else if (type.IsValueType())
             {
                 il.Emit(OpCodes.Unbox_Any, type);
                 if (addr != null)

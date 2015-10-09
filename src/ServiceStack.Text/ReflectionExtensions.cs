@@ -1563,6 +1563,24 @@ namespace ServiceStack
 #endif
         }
 
+        public static bool IsPublic(this Type type)
+        {
+#if (NETFX_CORE || PCL || DNXCORE50)
+            return type.GetTypeInfo().IsPublic;
+#else
+            return type.IsPublic;
+#endif
+        }
+
+        public static bool IsNestedPublic(this Type type)
+        {
+#if (NETFX_CORE || PCL || DNXCORE50)
+            return type.GetTypeInfo().IsNestedPublic;
+#else
+            return type.IsNestedPublic;
+#endif
+        }
+
         public static PropertyInfo GetPropertyInfo(this Type type, string propertyName)
         {
 #if (NETFX_CORE || PCL || DNXCORE50)
