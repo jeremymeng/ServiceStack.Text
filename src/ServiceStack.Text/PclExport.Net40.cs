@@ -22,7 +22,9 @@ using ServiceStack.Text.Json;
 
 #if !__IOS__
 using System.Reflection.Emit;
+#if !DNXCORE50
 using FastMember = ServiceStack.Text.FastMember;
+#endif
 #elif __UNIFIED__
 using Preserve = Foundation.PreserveAttribute;
 #else
@@ -221,6 +223,7 @@ namespace ServiceStack
 
         public override string MapAbsolutePath(string relativePath, string appendPartialPathModifier)
         {
+#if !DNXCORE50
             if (relativePath.StartsWith("~"))
             {
                 var assemblyDirectoryPath = Path.GetDirectoryName(new Uri(typeof(PathUtils).GetTypeInfo().Assembly.EscapedCodeBase).LocalPath);
@@ -232,13 +235,28 @@ namespace ServiceStack
 
                 return Path.GetFullPath(relativePath.Replace("~", hostDirectoryPath));
             }
+#endif
             return relativePath;
         }
 
+#if !DNXCORE50
         public override Assembly LoadAssembly(string assemblyPath)
         {
             return Assembly.LoadFrom(assemblyPath);
         }
+#else
+        //private class MyAssemblyLoadContext : System.Runtime.Loader.AssemblyLoadContext
+        //{
+        //}
+
+        public override Assembly LoadAssembly(string assemblyPath)
+        {
+            //var context = new MyAssemblyLoadContext();
+            //return context.LoadFromAssemblyPath(assemblyPath);
+            return base.LoadAssembly(assemblyPath);
+        }
+
+#endif
 
         public override void AddHeader(WebRequest webReq, string name, string value)
         {
@@ -277,16 +295,20 @@ namespace ServiceStack
             return assembly != null ? assembly.GetType(typeName) : null;
         }
 
+#if !DNXCORE50
         public override string GetAssemblyCodeBase(Assembly assembly)
         {
             return assembly.CodeBase;
         }
+#endif
 
+#if !DNXCORE50
         public override string GetAssemblyPath(Type source)
         {
-            var assemblyUri = new Uri(source.GetTypeInfo().Assembly.EscapedCodeBase);
+            var assemblyUri = new Uri(source.Assembly.EscapedCodeBase);
             return assemblyUri.LocalPath;
         }
+#endif
 
         public override string GetAsciiString(byte[] bytes, int index, int count)
         {
@@ -524,7 +546,7 @@ namespace ServiceStack
 
         public override ParseStringDelegate GetJsReaderParseMethod<TSerializer>(Type type)
         {
-#if !(__IOS__ || LITE)
+#if !(__IOS__ || LITE || DNXCORE50)
             if (type.AssignableFrom(typeof(System.Dynamic.IDynamicMetaObjectProvider)) ||
                 type.HasInterface(typeof(System.Dynamic.IDynamicMetaObjectProvider)))
             {
@@ -537,14 +559,16 @@ namespace ServiceStack
         public override void InitHttpWebRequest(HttpWebRequest httpReq,
             long? contentLength = null, bool allowAutoRedirect = true, bool keepAlive = true)
         {
+#if !DNXCORE50
             httpReq.UserAgent = Env.ServerUserAgent;
             httpReq.AllowAutoRedirect = allowAutoRedirect;
             httpReq.KeepAlive = keepAlive;
 
             if (contentLength != null)
             {
-                httpReq.ContentLength = contentLength.Value;
+                httpReq.Headers["Content-Length"] = contentLength.Value.ToString();
             }
+#endif
         }
 
         public override void CloseStream(Stream stream)
@@ -567,6 +591,7 @@ namespace ServiceStack
 
         public override void VerifyInAssembly(Type accessType, ICollection<string> assemblyNames)
         {
+#if !DNXCORE50
             //might get merged/mangled on alt platforms
             if (assemblyNames.Contains(accessType.GetTypeInfo().Assembly.ManifestModule.Name))
                 return;
@@ -587,6 +612,7 @@ namespace ServiceStack
                 accessType.GetTypeInfo().Assembly.Location);
 
             throw new LicenseException(LicenseUtils.ErrorMessages.UnauthorizedAccessRequest + errorDetails);
+#endif
         }
 
 #if !DNXCORE50
@@ -608,12 +634,14 @@ namespace ServiceStack
             string userAgent = null,
             bool? preAuthenticate = null)
         {
+#if !DNXCORE50
             req.MaximumResponseHeadersLength = int.MaxValue; //throws "The message length limit was exceeded" exception
             if (allowAutoRedirect.HasValue) req.AllowAutoRedirect = allowAutoRedirect.Value;
             if (readWriteTimeout.HasValue) req.ReadWriteTimeout = (int)readWriteTimeout.Value.TotalMilliseconds;
             if (timeout.HasValue) req.Timeout = (int)timeout.Value.TotalMilliseconds;
             if (userAgent != null) req.UserAgent = userAgent;
             if (preAuthenticate.HasValue) req.PreAuthenticate = preAuthenticate.Value;
+#endif
         }
 
         public override string GetStackTrace()
@@ -621,7 +649,7 @@ namespace ServiceStack
             return Environment.StackTrace;
         }
 
-#if !__IOS__
+#if !__IOS__ && !DNXCORE50
         public override SetPropertyDelegate GetSetPropertyMethod(PropertyInfo propertyInfo)
         {
             return CreateIlPropertySetter(propertyInfo);
@@ -989,7 +1017,7 @@ namespace ServiceStack
     }
 #endif
 
-#if !__IOS__
+#if !__IOS__ && !DNXCORE50
     public static class DynamicProxy
     {
         public static T GetInstanceFor<T>()
@@ -1335,8 +1363,13 @@ namespace ServiceStack
             }
         }
 
+
         public static bool VerifyLicenseKeyText(this string licenseKeyText, out LicenseKey key)
         {
+#if DNXCORE50
+            key = null;
+            return false;
+#else
             var publicRsaProvider = new RSACryptoServiceProvider();
             publicRsaProvider.FromXmlString(LicenseUtils.LicensePublicKey);
             var publicKeyParams = publicRsaProvider.ExportParameters(false);
@@ -1346,6 +1379,7 @@ namespace ServiceStack
             var signedData = Convert.FromBase64String(key.Hash);
 
             return VerifySignedHash(originalData, signedData, publicKeyParams);
+#endif
         }
 
         public static bool VerifySha1Data(this RSACryptoServiceProvider RSAalg, byte[] unsignedData, byte[] encryptedData)
@@ -1359,7 +1393,7 @@ namespace ServiceStack
             //return RSAalg.VerifyData(unsignedData, encryptedData, new EMSAPKCS1v1_5_SHA1()); 
         }
 
-#if !__IOS__
+#if !__IOS__ && !DNXCORE50
         //ReflectionExtensions
         const string DataContract = "DataContractAttribute";
 
@@ -1443,7 +1477,7 @@ namespace ServiceStack
     }
 }
 
-#if !__IOS__
+#if !__IOS__ && !DNXCORE50
 
 //Not using it here, but @marcgravell's stuff is too good not to include
 // http://code.google.com/p/fast-member/ Apache License 2.0
