@@ -35,8 +35,11 @@ namespace ServiceStack.Text
                 IsWindowsStore = true;
             }
 
-#if PCL || DNXCORE50
+#if PCL
             IsUnix = IsMono;
+#elif DNXCORE50
+            IsUnix = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux) ||
+                System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.OSX);
 #else
             var platform = (int)Environment.OSVersion.Platform;
             IsUnix = (platform == 4) || (platform == 6) || (platform == 128);
