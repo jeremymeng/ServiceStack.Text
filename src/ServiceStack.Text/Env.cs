@@ -91,7 +91,7 @@ namespace ServiceStack.Text
             get
             {
 #if !SL5
-                if (!IsMono && referenceAssembyPath == null)
+                if (!IsUnix && referenceAssembyPath == null)
                 {
                     var programFilesPath = PclExport.Instance.GetEnvironmentVariable("ProgramFiles(x86)") ?? @"C:\Program Files (x86)";
                     var netFxReferenceBasePath = programFilesPath + @"\Reference Assemblies\Microsoft\Framework\.NETFramework\";
