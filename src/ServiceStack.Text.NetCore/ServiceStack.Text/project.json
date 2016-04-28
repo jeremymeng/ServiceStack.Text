@@ -1,5 +1,5 @@
 ﻿{
-  "version": "4.1.0-rc2",
+  "version": "4.1.0-rc2-24022",
   "description": "ServiceStack.Text .NET Core",
   "authors": [ "" ],
   "tags": [ "" ],
@@ -21,7 +21,7 @@
   },
 
   "dependencies": {
-    "NETStandard.Library": "1.5.0-rc2-*"
+    "NETStandard.Library": "1.5.0-rc2-24022"
   },
 
   "compile": [
@@ -31,36 +31,36 @@
   "frameworks": {
     "netstandard1.5": {
       "dependencies": {
-        "System.Collections.Concurrent": "4.0.12-rc2-*",
-        "System.Collections.NonGeneric": "4.0.1-rc2-*",
-        "System.Collections.Specialized": "4.0.1-rc2-*",
-        "System.ComponentModel": "4.0.1-rc2-*",
-        "System.ComponentModel.Annotations": "4.1.0-rc2-*",
-        "System.Dynamic.Runtime": "4.0.11-rc2-*",
-        "System.Globalization": "4.0.11-rc2-*",
-        "System.Globalization.Extensions": "4.0.1-rc2-*",
-        "System.IO.Compression": "4.1.0-rc2-*",
-        "System.Linq": "4.1.0-rc2-*",
-        "System.Linq.Expressions": "4.0.11-rc2-*",
-        "System.Net.Http": "4.0.1-rc2-*",
-        "System.Net.Http.WinHttpHandler": "4.0.0-rc2-*",
-        "System.Net.NameResolution": "4.0.0-rc2-*",
-        "System.Net.Primitives": "4.0.11-rc2-*",
-        "System.Net.Requests": "4.0.11-rc2-*",
-        "System.Net.Sockets": "4.1.0-rc2-*",
-        "System.Net.WebHeaderCollection": "4.0.1-rc2-*",
-        "System.Reflection": "4.1.0-rc2-*",
-        "System.Reflection.TypeExtensions": "4.1.0-rc2-*",
-        "System.Runtime.InteropServices.RuntimeInformation": "4.0.0-rc2-*",
-        "System.Runtime.Serialization.Primitives": "4.1.1-rc2-*",
-        "System.Runtime.Serialization.Xml": "4.1.1-rc2-*",
-        "System.Security.Cryptography.Algorithms": "4.1.0-rc2-*",
-        "System.Security.Cryptography.Csp": "4.0.0-rc2-*",
-        "System.Security.Cryptography.X509Certificates": "4.1.0-rc2-*",
-        "System.Text.RegularExpressions": "4.0.12-rc2-*",
-        "System.Xml.ReaderWriter": "4.0.11-rc2-*",
-        "System.Xml.XDocument": "4.0.11-rc2-*",
-        "System.Xml.XmlSerializer": "4.0.11-rc2-*"
+        "System.Collections.Concurrent": "4.0.12-rc2-24022",
+        "System.Collections.NonGeneric": "4.0.1-rc2-24022",
+        "System.Collections.Specialized": "4.0.1-rc2-24022",
+        "System.ComponentModel": "4.0.1-rc2-24022",
+        "System.ComponentModel.Annotations": "4.1.0-rc2-24022",
+        "System.Dynamic.Runtime": "4.0.11-rc2-24022",
+        "System.Globalization": "4.0.11-rc2-24022",
+        "System.Globalization.Extensions": "4.0.1-rc2-24022",
+        "System.IO.Compression": "4.1.0-rc2-24022",
+        "System.Linq": "4.1.0-rc2-24022",
+        "System.Linq.Expressions": "4.0.11-rc2-24022",
+        "System.Net.Http": "4.0.1-rc2-24022",
+        "System.Net.Http.WinHttpHandler": "4.0.0-rc2-24022",
+        "System.Net.NameResolution": "4.0.0-rc2-24022",
+        "System.Net.Primitives": "4.0.11-rc2-24022",
+        "System.Net.Requests": "4.0.11-rc2-24022",
+        "System.Net.Sockets": "4.1.0-rc2-24022",
+        "System.Net.WebHeaderCollection": "4.0.1-rc2-24022",
+        "System.Reflection": "4.1.0-rc2-24022",
+        "System.Reflection.TypeExtensions": "4.1.0-rc2-24022",
+        "System.Runtime.InteropServices.RuntimeInformation": "4.0.0-rc2-24022",
+        "System.Runtime.Serialization.Primitives": "4.1.1-rc2-24022",
+        "System.Runtime.Serialization.Xml": "4.1.1-rc2-24022",
+        "System.Security.Cryptography.Algorithms": "4.1.0-rc2-24022",
+        "System.Security.Cryptography.Csp": "4.0.0-rc2-24022",
+        "System.Security.Cryptography.X509Certificates": "4.1.0-rc2-24022",
+        "System.Text.RegularExpressions": "4.0.12-rc2-24022",
+        "System.Xml.ReaderWriter": "4.0.11-rc2-24022",
+        "System.Xml.XDocument": "4.0.11-rc2-24022",
+        "System.Xml.XmlSerializer": "4.0.11-rc2-24022"
       }
     }
   }
