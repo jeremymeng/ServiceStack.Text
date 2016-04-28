@@ -55,3 +55,6 @@ _NCrunch*/
 *.ncrunchsolution
 *.xml
 *.xap
+
+project.lock.json
+launchSettings.json
