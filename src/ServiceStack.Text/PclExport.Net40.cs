@@ -22,7 +22,7 @@ using ServiceStack.Text.Json;
 
 #if !__IOS__
 using System.Reflection.Emit;
-#if !DNXCORE50
+#if !NET_CORE
 using FastMember = ServiceStack.Text.FastMember;
 #endif
 #elif __UNIFIED__
@@ -43,7 +43,7 @@ namespace ServiceStack
             this.DirSep = Path.DirectorySeparatorChar;
             this.AltDirSep = Path.DirectorySeparatorChar == '/' ? '\\' : '/';
             this.RegexOptions = RegexOptions.Compiled;
-#if DNXCORE50
+#if NET_CORE
             this.InvariantComparison = StringComparison.Ordinal;
             this.InvariantComparisonIgnoreCase = StringComparison.OrdinalIgnoreCase;
             this.InvariantComparer = CultureInfo.InvariantCulture.CompareInfo.GetStringComparer(CompareOptions.None);
@@ -55,7 +55,7 @@ namespace ServiceStack
             this.InvariantComparerIgnoreCase = StringComparer.InvariantCultureIgnoreCase;
 #endif
 
-#if DNXCORE50
+#if NET_CORE
             this.PlatformName = "DnxCore";
 #else
             this.PlatformName = Environment.OSVersion.Platform.ToString();
@@ -73,7 +73,7 @@ namespace ServiceStack
             return File.ReadAllText(filePath);
         }
 
-#if !DNXCORE50
+#if !NET_CORE
         public override string ToTitleCase(string value)
         {
             return TextInfo.ToTitleCase(value).Replace("_", String.Empty);
@@ -82,7 +82,7 @@ namespace ServiceStack
 
         public override string ToInvariantUpper(char value)
         {
-#if !DNXCORE50
+#if !NET_CORE
             return value.ToString(CultureInfo.InvariantCulture).ToUpper();
 #else
             return value.ToString().ToUpper();
@@ -141,7 +141,7 @@ namespace ServiceStack
 #elif __IOS__
 #else
             //Automatically register license key stored in <appSettings/>
-#if !DNXCORE50
+#if !NET_CORE
             var licenceKeyText = System.Configuration.ConfigurationManager.AppSettings[AppSettingsKey];
 #else
             var licenceKeyText = string.Empty;
@@ -168,7 +168,7 @@ namespace ServiceStack
 
         public override void WriteLine(string line)
         {
-#if !DNXCORE50
+#if !NET_CORE
             Console.WriteLine(line);
 #else
             System.Diagnostics.Debug.WriteLine(line);
@@ -177,14 +177,14 @@ namespace ServiceStack
 
         public override void WriteLine(string format, params object[] args)
         {
-#if !DNXCORE50
+#if !NET_CORE
             Console.WriteLine(format, args);
 #else
             System.Diagnostics.Debug.WriteLine(format, args);
 #endif
         }
 
-#if !DNXCORE50
+#if !NET_CORE
         public override void AddCompression(WebRequest webReq)
         {
             var httpReq = (HttpWebRequest)webReq;
@@ -195,7 +195,7 @@ namespace ServiceStack
 
         public override Stream GetRequestStream(WebRequest webRequest)
         {
-#if !DNXCORE50
+#if !NET_CORE
             return webRequest.GetRequestStream();
 #else
             return webRequest.GetRequestStreamAsync().Result;
@@ -204,14 +204,14 @@ namespace ServiceStack
 
         public override WebResponse GetResponse(WebRequest webRequest)
         {
-#if !DNXCORE50
+#if !NET_CORE
             return webRequest.GetResponse();
 #else
             return webRequest.GetResponseAsync().Result;
 #endif
         }
 
-#if !LITE && !DNXCORE50
+#if !LITE && !NET_CORE
         public override bool IsDebugBuild(Assembly assembly)
         {
             return assembly.AllAttributes()
@@ -223,7 +223,7 @@ namespace ServiceStack
 
         public override string MapAbsolutePath(string relativePath, string appendPartialPathModifier)
         {
-#if !DNXCORE50
+#if !NET_CORE
             if (relativePath.StartsWith("~"))
             {
                 var assemblyDirectoryPath = Path.GetDirectoryName(new Uri(typeof(PathUtils).GetTypeInfo().Assembly.EscapedCodeBase).LocalPath);
@@ -239,7 +239,7 @@ namespace ServiceStack
             return relativePath;
         }
 
-#if !DNXCORE50
+#if !NET_CORE
         public override Assembly LoadAssembly(string assemblyPath)
         {
             return Assembly.LoadFrom(assemblyPath);
@@ -260,14 +260,14 @@ namespace ServiceStack
 
         public override void AddHeader(WebRequest webReq, string name, string value)
         {
-#if !DNXCORE50
+#if !NET_CORE
             webReq.Headers.Add(name, value);
 #else
             webReq.Headers[name] = value;
 #endif
         }
 
-#if !DNXCORE50
+#if !NET_CORE
         public override Assembly[] GetAllAssemblies()
         {
             return AppDomain.CurrentDomain.GetAssemblies();
@@ -276,7 +276,7 @@ namespace ServiceStack
 
         public override Type FindType(string typeName, string assemblyName)
         {
-#if !DNXCORE50
+#if !NET_CORE
             var binPath = AssemblyUtils.GetAssemblyBinPath(Assembly.GetExecutingAssembly());
 #else
             var binPath = AssemblyUtils.GetAssemblyBinPath(typeof(Net40PclExport).GetTypeInfo().Assembly);
@@ -295,14 +295,14 @@ namespace ServiceStack
             return assembly != null ? assembly.GetType(typeName) : null;
         }
 
-#if !DNXCORE50
+#if !NET_CORE
         public override string GetAssemblyCodeBase(Assembly assembly)
         {
             return assembly.CodeBase;
         }
 #endif
 
-#if !DNXCORE50
+#if !NET_CORE
         public override string GetAssemblyPath(Type source)
         {
             var assemblyUri = new Uri(source.Assembly.EscapedCodeBase);
@@ -546,7 +546,7 @@ namespace ServiceStack
 
         public override ParseStringDelegate GetJsReaderParseMethod<TSerializer>(Type type)
         {
-#if !(__IOS__ || LITE || DNXCORE50)
+#if !(__IOS__ || LITE || NET_CORE)
             if (type.AssignableFrom(typeof(System.Dynamic.IDynamicMetaObjectProvider)) ||
                 type.HasInterface(typeof(System.Dynamic.IDynamicMetaObjectProvider)))
             {
@@ -559,7 +559,7 @@ namespace ServiceStack
         public override void InitHttpWebRequest(HttpWebRequest httpReq,
             long? contentLength = null, bool allowAutoRedirect = true, bool keepAlive = true)
         {
-#if !DNXCORE50
+#if !NET_CORE
             httpReq.UserAgent = Env.ServerUserAgent;
             httpReq.AllowAutoRedirect = allowAutoRedirect;
             httpReq.KeepAlive = keepAlive;
@@ -573,7 +573,7 @@ namespace ServiceStack
 
         public override void CloseStream(Stream stream)
         {
-#if !DNXCORE50
+#if !NET_CORE
             stream.Close();
 #else
             stream.Dispose();
@@ -591,7 +591,7 @@ namespace ServiceStack
 
         public override void VerifyInAssembly(Type accessType, ICollection<string> assemblyNames)
         {
-#if !DNXCORE50
+#if !NET_CORE
             //might get merged/mangled on alt platforms
             if (assemblyNames.Contains(accessType.GetTypeInfo().Assembly.ManifestModule.Name))
                 return;
@@ -615,7 +615,7 @@ namespace ServiceStack
 #endif
         }
 
-#if !DNXCORE50
+#if !NET_CORE
         public override void BeginThreadAffinity()
         {
             Thread.BeginThreadAffinity();
@@ -634,7 +634,7 @@ namespace ServiceStack
             string userAgent = null,
             bool? preAuthenticate = null)
         {
-#if !DNXCORE50
+#if !NET_CORE
             req.MaximumResponseHeadersLength = int.MaxValue; //throws "The message length limit was exceeded" exception
             if (allowAutoRedirect.HasValue) req.AllowAutoRedirect = allowAutoRedirect.Value;
             if (readWriteTimeout.HasValue) req.ReadWriteTimeout = (int)readWriteTimeout.Value.TotalMilliseconds;
@@ -649,7 +649,7 @@ namespace ServiceStack
             return Environment.StackTrace;
         }
 
-#if !__IOS__ && !DNXCORE50
+#if !__IOS__ && !NET_CORE
         public override SetPropertyDelegate GetSetPropertyMethod(PropertyInfo propertyInfo)
         {
             return CreateIlPropertySetter(propertyInfo);
@@ -1017,7 +1017,7 @@ namespace ServiceStack
     }
 #endif
 
-#if !__IOS__ && !DNXCORE50
+#if !__IOS__ && !NET_CORE
     public static class DynamicProxy
     {
         public static T GetInstanceFor<T>()
@@ -1066,7 +1066,7 @@ namespace ServiceStack
             foreach (var face in targetType.GetInterfaces())
                 IncludeType(face, typeBuilder);
 
-#if !DNXCORE50
+#if !NET_CORE
             return typeBuilder.CreateType();
 #else
             return typeBuilder.CreateTypeInfo().GetType();
@@ -1270,7 +1270,7 @@ namespace ServiceStack
             if (HttpUtils.ResultsFilter != null)
                 return null;
 
-#if !DNXCORE50
+#if !NET_CORE
             return webReq.GetResponse();
 #else
             return webReq.GetResponseAsync().Result;
@@ -1293,7 +1293,7 @@ namespace ServiceStack
             if (HttpUtils.ResultsFilter != null)
                 return null;
 
-#if !DNXCORE50
+#if !NET_CORE
             return webReq.GetResponse();
 #else
             return webReq.GetResponseAsync().Result;
@@ -1313,7 +1313,7 @@ namespace ServiceStack
             if (HttpUtils.ResultsFilter != null)
                 return null;
 
-#if !DNXCORE50
+#if !NET_CORE
             return webRequest.GetResponse();
 #else
             return webRequest.GetResponseAsync().Result;
@@ -1366,7 +1366,7 @@ namespace ServiceStack
 
         public static bool VerifyLicenseKeyText(this string licenseKeyText, out LicenseKey key)
         {
-#if DNXCORE50
+#if NET_CORE
             key = null;
             return false;
 #else
@@ -1384,7 +1384,7 @@ namespace ServiceStack
 
         public static bool VerifySha1Data(this RSACryptoServiceProvider RSAalg, byte[] unsignedData, byte[] encryptedData)
         {
-#if !DNXCORE50
+#if !NET_CORE
             return RSAalg.VerifyData(unsignedData, new SHA1CryptoServiceProvider(), encryptedData);
 #else
             return RSAalg.VerifyData(unsignedData, "SHA1", encryptedData);
@@ -1393,7 +1393,7 @@ namespace ServiceStack
             //return RSAalg.VerifyData(unsignedData, encryptedData, new EMSAPKCS1v1_5_SHA1()); 
         }
 
-#if !__IOS__ && !DNXCORE50
+#if !__IOS__ && !NET_CORE
         //ReflectionExtensions
         const string DataContract = "DataContractAttribute";
 
@@ -1477,7 +1477,7 @@ namespace ServiceStack
     }
 }
 
-#if !__IOS__ && !DNXCORE50
+#if !__IOS__ && !NET_CORE
 
 //Not using it here, but @marcgravell's stuff is too good not to include
 // http://code.google.com/p/fast-member/ Apache License 2.0
@@ -1836,7 +1836,7 @@ namespace ServiceStack.Text.FastMember
                 tb.DefineMethodOverride(body, baseMethod);
             }
 
-#if !DNXCORE50
+#if !NET_CORE
             return (TypeAccessor)Activator.CreateInstance(tb.CreateType());
 #else
             return (TypeAccessor)Activator.CreateInstance(tb.CreateTypeInfo().GetType());
